@@ -34,7 +34,7 @@
   <element>
     <type>com.umlet.element.Class</type>
     <coordinates>
-      <x>370</x>
+      <x>410</x>
       <y>430</y>
       <w>140</w>
       <h>30</h>
@@ -48,22 +48,22 @@
     <coordinates>
       <x>420</x>
       <y>340</y>
-      <w>50</w>
+      <w>120</w>
       <h>110</h>
     </coordinates>
     <panel_attributes>lt=&lt;&lt;-</panel_attributes>
-    <additional_attributes>30;30;30;90</additional_attributes>
+    <additional_attributes>30;30;30;60;100;60;100;90</additional_attributes>
   </element>
   <element>
     <type>com.umlet.element.Relation</type>
     <coordinates>
-      <x>480</x>
+      <x>520</x>
       <y>420</y>
-      <w>140</w>
+      <w>100</w>
       <h>50</h>
     </coordinates>
     <panel_attributes>lt=&lt;&lt;&lt;&lt;-</panel_attributes>
-    <additional_attributes>30;30;120;30</additional_attributes>
+    <additional_attributes>30;30;80;30</additional_attributes>
   </element>
   <element>
     <type>com.umlet.element.Class</type>
@@ -118,7 +118,7 @@
     <coordinates>
       <x>90</x>
       <y>430</y>
-      <w>240</w>
+      <w>310</w>
       <h>130</h>
     </coordinates>
     <panel_attributes>LandMap&lt;Point&gt;
@@ -126,8 +126,8 @@
 +isTerrain(Point)
 +isWater(Point)
 +isAir(Point)
-+getBorderOfTerrain(): Line
-+getBorderOfWater(): Line
++getBorderOfTerrain(): ClosedSubSpace
++getBorderOfWater(): ClosedSubSpace
 --
 </panel_attributes>
     <additional_attributes/>
@@ -214,12 +214,10 @@
       <w>250</w>
       <h>100</h>
     </coordinates>
-    <panel_attributes>HiperSpace&lt;Point&gt;
+    <panel_attributes>ClosedSubSpaceSpace&lt;Point&gt;
 --
-+isBelow(Point)
-+isAbow(Point)
 +addPoint(Point)
-+point():Point
++points():Iterator&lt;Point&gt;
 --
 </panel_attributes>
     <additional_attributes/>
@@ -236,8 +234,8 @@
 --
 
 --
-x:double
-y:double</panel_attributes>
++x:double
++y:double</panel_attributes>
     <additional_attributes/>
   </element>
   <element>
@@ -276,12 +274,37 @@ y:double</panel_attributes>
   <element>
     <type>com.umlet.element.Relation</type>
     <coordinates>
-      <x>300</x>
+      <x>370</x>
       <y>430</y>
-      <w>330</w>
+      <w>260</w>
       <h>120</h>
     </coordinates>
     <panel_attributes>lt=&lt;&lt;&lt;&lt;-</panel_attributes>
-    <additional_attributes>310;30;310;100;30;100</additional_attributes>
+    <additional_attributes>240;30;240;100;30;100</additional_attributes>
+  </element>
+  <element>
+    <type>com.umlet.element.Class</type>
+    <coordinates>
+      <x>340</x>
+      <y>750</y>
+      <w>240</w>
+      <h>70</h>
+    </coordinates>
+    <panel_attributes>PointLocator
+--
++pointIsBelow(Point, ClosedSubSpace)
++pointIsAbow(Point, ClosedSubSpace)</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <type>com.umlet.element.Relation</type>
+    <coordinates>
+      <x>280</x>
+      <y>530</y>
+      <w>90</w>
+      <h>240</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;&lt;&lt;&lt;-</panel_attributes>
+    <additional_attributes>30;30;30;80;70;80;70;220</additional_attributes>
   </element>
 </diagram>
