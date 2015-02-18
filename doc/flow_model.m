@@ -29,6 +29,11 @@ global surface_level = floor(step_per_meter * surface_height);
 
 # (t) level
 ##############################################
+# Grid
+# The grid is a special grid, called staggered grid.
+# u which is the x-axis direction of the velocity is given at every (i, j+1/2) points
+# v which is the y-axis direction of the velocity is given at every (i +  1/2, j) points
+# rho is given at (i + 1/2, j
 global u_map = zeros(N, N);
 global v_map = zeros(N,N);
 global rho_map = zeros(N,N);
@@ -62,8 +67,6 @@ function init_globals()
 	# v, and V can be zero everywhere
 	v_map = zeros(N,N);
 	V_map = v_map;
-	# pressure above the surface 1 ATM = 101325 Pa (N/m^2)
-	atm =  101325;
 	# density of air, let approximate to 1 (1,2 at 20 degrees of Celsius)
 	rho_map(1:surface_level - 1,1:N) = 1,2 * ones(surface_level - 1, N);
 	# density of water, let assume 998 (20 degrees of Celsius)
