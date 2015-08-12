@@ -40,9 +40,13 @@ global uMap;
 # t -> [ x, y ]
 global vMap;
 
-# Map of the forces
+# Map of the forces in the direction of x
 # [x, y] 
-global fMap;
+global fMapU;
+
+# Map of the forces in the direction of y
+# [x, y] 
+global fMapV;
 ################################################################################
 # Functions:                                                                   #
 ################################################################################
@@ -151,7 +155,7 @@ endfunction
 function val = gamma(i)
   global WIDTH;
   global H;
-  if i == 1 || i == idivide(WIDTH, H, "fix")
+  if (i == 1 || i == idivide(WIDTH, H, "fix"))
     val = 2/3;
   else
     val = 1;
@@ -166,6 +170,7 @@ endfunction
 #   - u: current value of velocity
 #   - i: current place
 function val = zeta(u, i)
+  global H;
   val = 1/2 * sqrt(gamma(i) * H^3 * abs(u));
 endfunction
 
@@ -178,10 +183,9 @@ endfunction
 #   - j: current position on the map
 function val = zeta_uu_x(U, i, j)
   global H;
-  val =
-    1/(H^2) * (zeta(u_x(U, i + 1, 1, j, 1)) * (get_coord(U, i + 2, 0, j, 1) - get_coord(U, i + 1, 0, j, 1)) / H 
-               - 2 * zeta(u_x(U, i, 1, j, 1)) * (get_coord(U, i + 1, 0, j, 1) - get_coord(U, i, 0, j, 1)) / H 
-               + zeta(u_x(U, i - 1, 1, j, 1)) * (get_coord(U, i, 0, j, 1) - get_coord(U, i - 1, 0, j, 1)) / H);
+  val = 1/(H^2) * (zeta(u_x(U, i + 1, 1, j, 1)) * (get_coord(U, i + 2, 0, j, 1) - get_coord(U, i + 1, 0, j, 1)) / H 
+                   - 2 * zeta(u_x(U, i, 1, j, 1)) * (get_coord(U, i + 1, 0, j, 1) - get_coord(U, i, 0, j, 1)) / H 
+                   + zeta(u_x(U, i - 1, 1, j, 1)) * (get_coord(U, i, 0, j, 1) - get_coord(U, i - 1, 0, j, 1)) / H);
 endfunction
 
 ###############################################################################
@@ -333,9 +337,8 @@ endfunction
 function res = div_u_part(U, i, j)
   global RE;
   global H;
-  res = 
-    1/RE * ((get_coord(U, i + 1, 0, j, 1) - 2 * get_coord(U, i, 0, j, 1) + get_coord(U, i - 1, 0, j, 1))/(H^2)
-            + (get_coord(U, i, 0, j + 1, 1) - 2 * get_coord(U, i, 0, j, 1) + get_coord(U, i, 0, j - 1, 1))/(H^2));
+  res = 1/RE * ((get_coord(U, i + 1, 0, j, 1) - 2 * get_coord(U, i, 0, j, 1) + get_coord(U, i - 1, 0, j, 1))/(H^2)
+                + (get_coord(U, i, 0, j + 1, 1) - 2 * get_coord(U, i, 0, j, 1) + get_coord(U, i, 0, j - 1, 1))/(H^2));
 endfunction
 
 ###############################################################################
@@ -347,9 +350,8 @@ endfunction
 function res = div_v_part(V, i, j)
   global RE;
   global H;
-  res = 
-    1/RE * ((get_coord(V, i + 1, 1, j, 0) - 2 * get_coord(V, i, 1, j, 0) + get_coord(V, i - 1, 1, j, 0))/(H^2)
-            + (get_coord(V, i, 1, j + 1, 0) - 2 * get_coord(V, i, 1, j, 0) + get_coord(V, i, 1, j - 1, 0))/(H^2));
+  res = 1/RE * ((get_coord(V, i + 1, 1, j, 0) - 2 * get_coord(V, i, 1, j, 0) + get_coord(V, i - 1, 1, j, 0))/(H^2)
+                + (get_coord(V, i, 1, j + 1, 0) - 2 * get_coord(V, i, 1, j, 0) + get_coord(V, i, 1, j - 1, 0))/(H^2));
 endfunction
 
 ###############################################################################
@@ -382,7 +384,35 @@ endfunction
 
 # Initialize global maps
 function initMaps()
-# TODO create fully calculated stredger grid. Efficiency is not part of the goal of this script.
+  global T;
+  global H;
+  global MAXITERATION;
+  global WIDTH;
+  global HEIGHT;
+  global rhoMap;
+  global uMap;
+  global vMap;
+  global fMapU;
+  global fMapV;
+  T = 1;
+  H = 1;
+  MAXITERATION = 1;
+  WIDTH = 8;
+  HEIGHT = 8;
+
+  discWidth = idivide(HEIGHT, H, "fix");
+  discHeight = idivide(WIDTH, H, "fix");
+
+  rhoMap{1} = 2 .* ones(discHeight, discWidth);
+
+  uMap{1} = zeros(discHeight, discWidth);
+  vMap{1} = zeros(discHeight, discWidth);
+
+  fMapU = zeros(discWidth, discHeight);
+  fMapV = zeros(discWidth, discHeight);
+  fMapV(2, 2:(discWidth - 1)) = 5;  
+
+# TODO !!!!!!!!!!!!! create fully calculated stredger grid. Efficiency is not part of the goal of this script.
 #      therefore it is easier to store it once, and use it.
 endfunction;
 
@@ -397,21 +427,26 @@ function [w, ww] = predictorStep(t)
   global rhoMap;
   global uMap;
   global vMap;
-  global fMap;
+  global fMapU;
+  global fMapV;
   global HEIGHT;
   global WIDTH;
   global H;
-  w = zeros(HEIGHT / H, WIDTH / H);
-  for i = 1 : idivide(HEIGHT, H, "fix")
-    for j = 1 : idivide(WIDTH, H, "fix")
-      if i != 1 && j != 1
-        w(i, j) = fMap(i, j)(1) - grad_rho(rhoMap{t - 1}, i, j)(1) + (1 / T * uMap{t - 1}(i, j));
+  global T;
+  discWidth = idivide(HEIGHT, H, "fix");
+  discHeight = idivide(WIDTH, H, "fix");
+  w = zeros(discHeight, discWidth);
+  ww = zeros(discHeight, discWidth);
+  for i = 1 : discHeight
+    for j = 1 : discWidth
+      if (i != 1 && j != 1)
+        w(i, j) = fMapU(i, j) - grad_rho(rhoMap{t - 1}, i, j)(1) + (1 / T * uMap{t - 1}(i, j));
         w(i, j) = w(i, j) / (1 / T + L_x(uMap{t - 1}, vMap{t - 1}, i, j));
-        ww(i, j) = fMap(i, j)(2) - grad_rho(rhoMap{t - 1}, i, j)(2) + (1 / T * uMap{t - 1}(i, j));
+        ww(i, j) = fMapV(i, j) - grad_rho(rhoMap{t - 1}, i, j)(2) + (1 / T * uMap{t - 1}(i, j));
         ww(i, j) = ww(i, j) / (1 / T + L_y(uMap{t - 1}, vMap{t - 1}, i, j));
       else
-        w(i, j) = fMap(i, j);
-        ww(i, j) = fMap(i, j);
+        w(i, j) = fMapU(i, j);
+        ww(i, j) = fMapV(i, j);
       endif
     endfor
   endfor     
@@ -438,7 +473,7 @@ endfunction
 function calculatePreassure(q, i)
   global rhoMap;
 #TODO
-  rhoMap{i} = rhoMap{i - 1} + q;
+#  rhoMap{i} = rhoMap{i - 1} + q;
 endfunction
 
 ###############################################################################
@@ -451,8 +486,8 @@ endfunction
 function calculateVelocity(w, v, q, i)
   global T;
 #TODO
-  uMap{i} = w - T * grad(q);
-  vMap{i} = v - T * grad(q);
+#  uMap{i} = w - T * grad(q);
+#  vMap{i} = v - T * grad(q);
 endfunction
 
 ###############################################################################
@@ -464,9 +499,9 @@ function traceMaps(i)
   global uMap;
   global vMap;
   global rhoMap;
-  traceMap(uMap, i);
-  traceMap(vMap, i);
-  traceMap(rhoMap, i);
+#  traceMap(uMap, i);
+#  traceMap(vMap, i);
+#  traceMap(rhoMap, i);
 endfunction
 
 ################################################################################
@@ -476,10 +511,10 @@ endfunction
 initMaps();
 
 for i = 1:MAXITERATION
-  [w, v] = predictorStep(i);
- # q = solvePoission(w, v, i);
- # calculatePreassure(q, i);
- # calculateVelocity(w, v, q, i);
+  [w, v] = predictorStep(i + 1);
+ # q = solvePoission(w, v, i + 1);
+ # calculatePreassure(q, i + 1);
+ # calculateVelocity(w, v, q, i + 1);
  # traceMaps();
 endfor
 
